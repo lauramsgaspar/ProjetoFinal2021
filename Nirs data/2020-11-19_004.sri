@@ -1,0 +1,41 @@
+FileVersion:            1.4
+
+NrOfSources:            8
+NrOfDetectors:          15
+NrOfFullTimePoints:     5448
+
+SamplingRate:           10.1729
+
+OxyDeoxyFile:           "C:/Users/User/Documents/GitHub/fNIRS_ISEC2021/Nirs data/2020-11-19_004_TSI.ntc"
+FilteredOxyDeoxyFile:   "C:/Users/User/Documents/GitHub/fNIRS_ISEC2021/Nirs data/2020-11-19_004_filtered_TSI.ntc"
+RawDataWavelenght1:     "C:/Users/User/Documents/GitHub/fNIRS_ISEC2021/Nirs data/2020-11-19_004.wl1"
+RawDataWavelenght2:     "C:/Users/User/Documents/GitHub/fNIRS_ISEC2021/Nirs data/2020-11-19_004.wl2"
+
+ProtocolFile:           "C:/Users/User/Documents/GitHub/fNIRS_ISEC2021/Nirs data/2020-11-19_004_autosave.prt"
+ProtocolIncludesRest:   0
+
+ValuesScaleFactor:      200
+
+PreprocessedData:       0
+HighPassFilter:         0
+HighPassFilterNCycles:  0
+LinearTrendOnlyHP:      0
+LowPassFilter:          0
+LowPassGaussianFWHM:    0
+ZNormalisation:         0
+BaselineAdjustment:     0
+BaselineZeroPercentile: 0
+
+ErAVGValuesType:        Seconds
+ErAVGFullWindowSize:    50
+ErAVGPreOnsetWindow:    5
+
+ChannelMask:
+1 1 1 0 0 0 0 0 0 0 1 0 0 0 0
+1 0 1 1 0 0 0 0 0 1 0 0 0 0 0
+0 1 1 0 0 0 0 0 1 0 0 0 0 0 0
+0 0 1 1 0 0 0 1 0 0 0 0 0 0 0
+0 0 0 0 1 1 1 0 0 0 0 0 0 0 1
+0 0 0 0 1 0 1 0 0 0 0 0 0 1 0
+0 0 0 0 0 1 1 0 0 0 0 0 1 0 0
+0 0 0 0 0 0 1 0 0 0 0 1 0 0 0

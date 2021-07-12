@@ -1,0 +1,31 @@
+
+FileVersion:        2
+
+ResolutionOfTime:   Volumes
+
+Experiment:         2020-11-19_004
+
+BackgroundColor:    0 0 0
+TextColor:          255 255 255
+TimeCourseColor:    255 255 30
+TimeCourseThick:    2
+ReferenceFuncColor: 30 200 30
+ReferenceFuncThick: 2
+
+NrOfConditions:  2
+
+Cond. 1
+4
+ 386  691
+2288 2593
+3560 3865
+4180 4485
+Color: 200 0 0
+
+Cond. 2
+4
+1006 1312
+1647 1952
+2919 3224
+4811 5116
+Color: 100 200 80
