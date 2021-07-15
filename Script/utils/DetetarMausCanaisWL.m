@@ -1,9 +1,4 @@
 function [ind_excluir ] = DetetarMausCanaisWL( nirs_file, CVThreshold, SNRThreshold )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
-
-%Example  :  [indices] = DetetarMausCanaisWL (file, CVthreshold,
-%SNRThreshold)
 
 ind_excluir=[];
 for i=1:size(nirs_file.probe.link,1)
@@ -14,13 +9,13 @@ for i=1:size(nirs_file.probe.link,1)
     if ((CV(i)> CVThreshold) || (SNR(i)<SNRThreshold))
         t_idx=i;
         ind_excluir(i)=t_idx;
-        %newnirs_file.data(:,ind_excluir)=[];% VER
+        %newnirs_file.data(:,ind_excluir)=[];
     else
         continue;
     end
 end
 
-%% Plot CV(%) and SNR per Channel
+%% Representação gráfico CV(%) and SNR por canal
 figure;
 subplot(1,2,1)
 plot(CV*100)

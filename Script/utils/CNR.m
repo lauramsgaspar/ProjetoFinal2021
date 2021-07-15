@@ -10,15 +10,15 @@ t_CNR_MI = (mean(MIData,1)- mean(BasData,1)) ./ (sqrt(std(MIData,1) + std(BasDat
 CNR_MA = t_CNR_MA(:,idx_long);
 CNR_MI = t_CNR_MI(:, idx_long);
 
-%Dividir em canais Hbo e Hbr
+%Dividir em canais HbO e HbR
 CNR_MA_Hbo = CNR_MA(1:2:end);
 CNR_MA_Hbr = CNR_MA(2:2:end);
 
 CNR_MI_Hbo = CNR_MI(1:2:end);
 CNR_MI_Hbr = CNR_MI(2:2:end);
 
-%% Plot CNR por canal
-%Execução Motora
+%% Representação gráfica do CNR por canal
+%MA
 figure;
 subplot(1,2,1)
 plot(CNR_MA_Hbo,'o');
@@ -34,7 +34,7 @@ title('CNR da condição execução motora para canais HbR');
 ylabel('CNR = (\mu MA - \mu Bas) / sqrt(\sigma MA + \sigma Bas)')
 xlabel('Canal')
 
-%Imaginação Motora
+%MI
 figure;
 subplot(1,2,1)
 plot(CNR_MI_Hbo, 'o');

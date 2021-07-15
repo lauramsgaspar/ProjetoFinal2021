@@ -1,8 +1,7 @@
 function [signal_corrected]= TDDR(signal,sample_rate)
-%% retirado de https://github.com/frankfishburn/TDDR/blob/master/TDDR.m
-%% Artigo: Fishburn, F. A., Ludlum, R. S., Vaidya, C. J., & Medvedev, A. V. (2019).
+%% retirado de: https://github.com/frankfishburn/TDDR/blob/master/TDDR.m
+%% Baseado no artigo: Fishburn, F. A., Ludlum, R. S., Vaidya, C. J., & Medvedev, A. V. (2019).
 %Temporal Derivative Distribution Repair (TDDR): A motion correction method for fNIRS. NeuroImage, 184, 171–179.
-%https://doi.org/10.1016/j.neuroimage.2018.09.025
 %% Iterate over each channel
 nch = size(signal,2);
 if nch>1
@@ -79,7 +78,8 @@ signal_low_corrected = signal_low_corrected - mean(signal_low_corrected);
 %% Postprocess: Merge back with uncorrected high frequency component
 signal_corrected = signal_low_corrected + signal_high + signal_mean;
 
-%% Plot da derivada, derivada corrigida e ponderações
+%% Representação gráfica da derivada, derivada corrigida e ponderações
+%referente ao par fonte-detetor S1-D1, sinal HbO
 figure;
 subplot(3,1,1)
 plot(deriv(:,1));

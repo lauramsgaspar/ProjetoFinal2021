@@ -1,17 +1,21 @@
-%% Estágio Curricular
-%% Laura Gaspar a21280722@isec.pt
+%% Estágio Curricular 
+%% Laura Gaspar - a21280722@isec.pt
+%A pipeline de análise de dados, pré-processamento de dados e análise estatística do impacto do pré-processamento
+%de dados fNIRS em tarefas motoras (BAS, MI, MA), desenvolvido no âmbito deste estágio, é apresentada seguidamente:
+
 %% Load Data
 clear all
 close all
 addpath('utils')
-%nirs_file =nirs.io.loadDirectory('C:\Users\HP\Documents\GitHub\fNIRS_ISEC2021');  %
+%nirs_file =nirs.io.loadDirectory('C:\Users\HP\Documents\GitHub\fNIRS_ISEC2021'); 
 nirs_file =nirs.io.loadDirectory('C:\Users\User\Documents\GitHub\fNIRS_ISEC2021\Nirs data');  
+
 %% Tratamento de dados
 j=nirs.modules.Resample(); 
 j.Fs=10;
 nirs_file = j.run(nirs_file); 
 
-%Substituir o nome das nossas condições
+%Renomear as condições
 j=nirs.modules.RenameStims(); 
 j.listOfChanges={
       'stim_channel21' 'Baseline';
@@ -20,13 +24,14 @@ j.listOfChanges={
       };
 nirs_file = j.run(nirs_file); %executar
 
-%Mudar a duração dos blocos de condição para 30 segundos
+%Alterar a duração dos blocos de condição para 30 segundos
 %nirs_file=nirs.viz.StimUtil(nirs_file);
 duracao_bloco=30;
 nirs_file=nirs.design.change_stimulus_duration(nirs_file,[],duracao_bloco);
 nirs_file=j.run(nirs_file);
 
-%% Excluir canais com base no valor de Variância e racio Sinal-Ruido
+%% Avaliação da qualidade do sinal fNIRS (CV, SNR, Matriz Autocorrelção entre HbR/HbO, CNR)
+%% Excluir canais com base no valor de Variância (CV(%)) e rácio Sinal-Ruido (SNR)
 CVThreshold=0.15;
 SNRThreshold=20;
 [idx] = DetetarMausCanaisWL (nirs_file, CVThreshold, SNRThreshold); 
@@ -34,13 +39,14 @@ SNRThreshold=20;
 NirsData_CR = nirs_file;  %NirsData after Channel Rejection
 NirsData_CR.data(:,idx)=[];
 
-%% Transformar dados de intensidade de luz para dados de hemoglobina através da LBLM
+%% Transformar dados de intensidade de luz para dados de hemoglobina aplicando a densidade ótica e a Lei Modificada de Beer Lambert
 j = nirs.modules.OpticalDensity(  );
 j = nirs.modules.BeerLambertLaw( j );
 hb=j.run(NirsData_CR);
 Fs=hb.Fs;
 
-%% Plot antes e depois da Lei Modificada de BeerLambert
+%% Representação gráfica do antes e depois da Lei Modificada de Beer Lambert
+% referente ao par fonte-detetor: S1-D1, sinal HbO
 figure;
 subplot(2,1,1)
 plot(nirs_file.data(:,1));
@@ -53,18 +59,17 @@ title('Dados de hemoglobina');
 ylabel('Amplitude'); %concentrações de hemoglobina
 xlabel('Timepoints');
 
-%% Correr GLM - Dados iniciais
+%% GLM - Dados iniciais
 j=nirs.modules.GLM(); 
 SubjStats=j.run(hb); 
 SubjStats.draw('beta', [-2 2], 'p < 0.05')
 ValoresBetaInicial = SubjStats.beta; % Valores de beta guardados numa coluna [156x1]
 
-%Nota: esta coluna contem hbo, hbr, canais longos, canais curtos e as 3
-%condições
+%Nota: esta coluna contem hbo, hbr, canais longos, canais curtos e as 3 condições
 
-%% Agrupar Dados fNIRS por Condição 
+%% Agrupar dados fNIRS por condição 
 
-% Condição Baseline antes do processamento
+% BAS - antes do processamento
 NRofChannels = size(hb.probe.link, 1);
 NrOfOnsetB = size(hb.stimulus.values{1}.onset,1);
 Baseline_Vector = zeros(duracao_bloco*hb.Fs,NRofChannels,NrOfOnsetB-1);
@@ -78,7 +83,7 @@ end
 Baseline_Data = reshape(Baseline_Vector, [(NrOfOnsetB-1)*size(Baseline_Vector,1), NRofChannels]);
 
 
-% Imaginacao Motora antes do processamento
+% MI - antes do processamento
 NrOfOnsetMI = size(hb.stimulus.values{2}.onset,1);
 MotorImagery_Vector = zeros(duracao_bloco*hb.Fs,NRofChannels, NrOfOnsetMI);
 for i =1 : NrOfOnsetMI
@@ -89,7 +94,7 @@ end
 %Matlab reshape
 MotorImagery_Data = reshape(MotorImagery_Vector, [NrOfOnsetMI*size(MotorImagery_Vector,1), NRofChannels]);
 
-% Execucao Motora antes do processamento
+% MA - antes do processamento
 NrOfOnsetMA = size(hb.stimulus.values{3}.onset,1);
 MotorAction_Vector = zeros(duracao_bloco*hb.Fs,NRofChannels,NrOfOnsetMA);
 for i =1 : NrOfOnsetMA
@@ -100,14 +105,14 @@ end
 %Matlab reshape
 MotorAction_Data = reshape(MotorAction_Vector, [NrOfOnsetMA*size(MotorAction_Vector,1), NRofChannels]);
 
-%% Diferenciar dados por condição para canais Hbo e Hbr - Antes do Processamento
-
+%% Diferenciar dados por condição para canais HbO e HbR - Antes do processamento
+%BAS
 BaselineData_HBO = Baseline_Data(:,1:2:end);
 BaselineData_HBR = Baseline_Data(:,2:2:end);
-
+%MI
 MIData_HBO = MotorImagery_Data(:,1:2:end);
 MIData_HBR = MotorImagery_Data(:,2:2:end);
-
+%MA
 MAData_HBO=MotorAction_Data(:,1:2:end);
 MAData_HBR=MotorAction_Data(:,2:2:end);
 
@@ -135,18 +140,17 @@ CombinedMA_HBR = reshape(MAData_HBR, [(size(MAData_HBR,1)* size(MAData_HBR,2)), 
 % title('Combinação das condições para canais Hbo');
 % xlabel('Condições');
 
-%% Contrast-to-Noise Ration - Antes do Processamento
+%% Contrast-to-noise ration (CNR) - Antes do processamento
 [CNR_MA_Hbo, CNR_MA_Hbr, CNR_MI_hbo, CNR_MI_Hbr ] = CNR( hb, Baseline_Data, MotorImagery_Data, MotorAction_Data);
 
-%% Matriz de Autocorrelacao HbO e HbR antes do processamento (métrica mais especifica para o fnirs)
-
+%% Matriz de Autocorrelação HbO e HbR - Antes do processamento (métrica mais especifica para o fNIRS)
 [diagonalCorrelacaoAntes, diagonalCorrelacaoLongoAntes, mediaAutoCorrLongoAntes, stdAutoCorrLongoAntes] = AutoCorrelationMatrix(hb);
 
-%% Ténicas de Pre-processamento
-
-%% i) Filtragem de dados - Filtro Butterworth de 3ªordem
+%% Ténicas de Pre-processamento (Filtro passa-banda butterworth de 3ªordem, TDDR, SSR)
+%% Filtragem de dados - Filtro passa-banda Butterworth de 3ªordem
 UnfilteredSignal=hb.data; 
 sample_rate=hb.Fs;
+%ordem
 FilterOrder=3;
 %Frequencia de corte
 FreqInterval1=0.01;
@@ -154,7 +158,8 @@ FreqInterval2=0.09;
 
 [FilteredSignal, Filtered1, BandPassFilteredSignal] = filterButterworth(sample_rate, UnfilteredSignal, FreqInterval1, FreqInterval2,FilterOrder);
 
-%% Análise Espectograma
+%% Análise espectograma
+% referente ao par fonte-detetor S2-D3, sinal HbO
 figure;
 subplot(2,1,1)
 spectrogram(UnfilteredSignal(:,11));
@@ -169,11 +174,13 @@ subplot(2,1,2)
 spectrogram(BandPassFilteredSignal(:,11))
 title('Espectograma do canal 11 aplicando o Filtro Butterworth Passa-Banda de 3ª ordem com wn=[0.01, 0.09] Hz ')
 
-%% ii) Remoção de Artefacto de movimento - TDDR
-%TDDR
+%% Correção do ruído de movimento 
+% Foi implementado o algoritmo de correção Temporal Derivative Distribution
+% Repair (TDDR)
 MotionCorrected = TDDR(BandPassFilteredSignal, hb.Fs);
 
-%plot
+%Representação gráfica
+%referente ao par fonte-detetor S1-D1, sinal HbO
 figure;
 subplot(3,1,1)
 plot(hb.data(:,1));
@@ -192,11 +199,12 @@ xlabel('Timepoints');
 ylabel('Amplitude');
 ylim([-100 100])
 
-%% iii) Remoção de Ruído extracerebral - SSR
+%% Remoção de ruído extracerebral 
+% Recorreu-se ao método Short Separation Regression - SSR
 hb.data = MotionCorrected;
 [RegressedData] = ShortSeparationRegression(hb);
 
-%% Autocorrelação entre HbR e HbO - Após Processamento
+%% Autocorrelação entre HbR e HbO - Após processamento
 % NOTA: O DATASET DE INTERESSE AGORA É (RegressedData)
 
 FinalHb = RegressedData;
@@ -205,9 +213,9 @@ FinalHb = RegressedData;
 boxplot([diagonalCorrelacaoLongoAntes, diagonalCorrelacaoLongoDepois])
 title('Autocorrelação com canais longos antes e após o Processamento')
 
-%% Agrupamento de dados - Após Processamento
+%% Agrupamento de dados - Após processamento
 
-%Condição Baseline após processamento
+%BAS - Após processamento
 Baseline_Vector2 = zeros(duracao_bloco*FinalHb.Fs,NRofChannels,NrOfOnsetB-1);
 
 for i=1 : NrOfOnsetB-1
@@ -220,7 +228,7 @@ end
 Baseline_DataFinal = reshape(Baseline_Vector2, [(NrOfOnsetB-1)*size(Baseline_Vector2,1), NRofChannels]);
 
 
-%Imaginacao Motora após processamento
+%MI - Após processamento
 MotorImagery_Vector2 = zeros(duracao_bloco*FinalHb.Fs,NRofChannels, NrOfOnsetMI);
 for i =1 : NrOfOnsetMI
     Idx_iMI=FinalHb.stimulus.values{2}.onset(i);
@@ -231,7 +239,7 @@ end
 MotorImagery_DataFinal = reshape(MotorImagery_Vector2, [NrOfOnsetMI*size(MotorImagery_Vector2,1), NRofChannels]);
 
 
-%Execucao Motora após processamento
+%MA - Após processamento
 MotorAction_Vector2 = zeros(duracao_bloco*hb.Fs,NRofChannels,NrOfOnsetMA);
 for i =1 : NrOfOnsetMA
     Idx_iMA=FinalHb.stimulus.values{3}.onset(i);
@@ -254,11 +262,11 @@ MAData_Final_HBR=MotorAction_DataFinal(:,2:2:end);
 
 %% Verificação do impacto do processamento através do boxplot
 
-%antes do processamento
+% Antes do processamento
 CombinedBAS_HBO = reshape(BaselineData_HBO, [(size(BaselineData_HBO,1)* size(BaselineData_HBO,2)), 1]);
 CombinedMI_HBO = reshape(MIData_HBO, [(size(MIData_HBO,1)* size(MIData_HBO,2)), 1]);
 CombinedMA_HBO = reshape(MAData_HBO, [(size(MAData_HBO,1)* size(MAData_HBO,2)), 1]);
-%depois do processamento
+% Depois do processamento
 CombinedBAS_HBO_Pos = reshape(Baseline_Final_HBO, [(size(Baseline_Final_HBO,1)* size(Baseline_Final_HBO,2)), 1]);
 CombinedMI_HBO_Pos = reshape(MIData_Final_HBO, [(size(MIData_Final_HBO,1)* size(MIData_Final_HBO,2)), 1]);
 CombinedMA_HBO_Pos = reshape(MAData_Final_HBO, [(size(MAData_Final_HBO,1)* size(MAData_Final_HBO,2)), 1]);
@@ -269,17 +277,8 @@ boxplot(xhbo, ghbo)
 title('Impacto do processamento para dados de HbO');
 xlabel('Condições');
 
-
-
-%% Contrast-to-Noise Ratio - Após Processamento
+%% Contrast-to-noise ratio (CNR) - Após processamento
 [CNR_MA_Hbo, CNR_MA_Hbr, CNR_MI_hbo, CNR_MI_Hbr ] = CNR( hb, Baseline_DataFinal, MotorImagery_DataFinal , MotorAction_DataFinal );
-
-%% GLM - Dados finais
-%Agora sim, vamos correr o GLM
-j=nirs.modules.GLM(); 
-ActivacaoFinal=j.run(FinalHb); 
-ActivacaoFinal.draw('beta', [-2 2], 'p < 0.05') %mapas de ativação
-
 
 %% Média de bloco - Block Average
 % Canal de interesse possivel(S2D3) = 6;
@@ -295,7 +294,7 @@ Channel11MI_final = MIData_Final_HBO (:,6);
 t_BlockAverage11MI_final = reshape(Channel11MI_final, [hb.Fs*duracao_bloco,NrRepetitions]);
 BlockAverage11MI_final = mean(t_BlockAverage11MI_final,2);
 
-% Plot
+% Representação gráfica
 figure;
 subplot(1,2,1)
 plot(BlockAverage11MI_inicial)
@@ -319,10 +318,8 @@ BlockAverage11MA_inicial = mean(t_BlockAverage11MA_inicial,2);
 Channel11MA_final = MAData_Final_HBO (:,6);
 t_BlockAverage11MA_final = reshape(Channel11MA_final, [hb.Fs*duracao_bloco,NrRepetitions]);
 BlockAverage11MA_final = mean(t_BlockAverage11MA_final,2);
-% std_y=std(t_BlockAverage11MA_final,2);
-% shadedErrorBar(x, y, {@mean, @(x) 2*std(x)  }, '-r', 0);
 
-% Plot
+% Representação gráfica
 figure;
 subplot(1,2,1)
 plot(BlockAverage11MA_inicial)
@@ -335,8 +332,13 @@ xlabel('Timepoints');
 ylabel('Amplitude');
 title('Média de bloco da condição MA depois do processamento (canal 11)'); 
 
+%% GLM - Dados finais
+%Agora sim, vamos correr o GLM
+j=nirs.modules.GLM(); 
+ActivacaoFinal=j.run(FinalHb); 
+ActivacaoFinal.draw('beta', [-2 2], 'p < 0.05') %mapas de ativação
 
-%% Análise de Betas
+%% Análise de betas
 %Remover os canais curtos, considerar 52 links por condição
 %A variavel 'SubjectStats.variables'está organizada por condição 52 links
 %cada condição pela seguinte ordem 'Baseline', 'MI', 'MA'
@@ -365,7 +367,6 @@ BetasMAFinal = ActivacaoFinal.beta(IndiceBetaMA);
 [h6k, p6k]= lillietest(BetasMAFinal)
 
 % Testes Estatisticos sobre a Distribuição dos Betas
-<<<<<<< HEAD
 [p1, h1] = ranksum(BetasBaselineFinal,BetasBaselineInicio);
 [p2, h2] = ranksum(BetasMIFinal,BetasMIInicio);
 [p3, h3] = ranksum(BetasMAFinal,BetasMAInicio);
@@ -380,7 +381,6 @@ BetasMAFinal = ActivacaoFinal.beta(IndiceBetaMA);
 [p7, p7] = ranksum(BetasBaselineFinal(2:2:end),BetasBaselineInicio(2:2:end))
 [p8, p8] = ranksum(BetasMIFinal(2:2:end),BetasMIInicio(2:2:end))
 [p9, p9] = ranksum(BetasMAFinal(2:2:end),BetasMAInicio(2:2:end))
-=======
 
 [p1, h1, stats1] = ranksum(BetasBaselineFinal,BetasBaselineInicio);
 [p2, h2, stats2] = ranksum(BetasMIFinal,BetasMIInicio);
@@ -396,7 +396,6 @@ BetasMAFinal = ActivacaoFinal.beta(IndiceBetaMA);
 [p7, p7, stats7] = ranksum(BetasBaselineFinal(2:2:end),BetasBaselineInicio(2:2:end))
 [p8, p8, stats8] = ranksum(BetasMIFinal(2:2:end),BetasMIInicio(2:2:end))
 [p9, p9, stats9] = ranksum(BetasMAFinal(2:2:end),BetasMAInicio(2:2:end))
->>>>>>> 25c27c6ec65d77e69964facab245ab22dc73b1de
 
 %% Análise de Contraste (MI>MA)
 SubjStats.conditions
@@ -430,7 +429,7 @@ BetaContrasteFinal = MISuperiorMA_final.beta(IndiceContraste);
 
 %% Sorting betas
 % Top 3 canais mais ativos/valores de beta maiores Por condição
-%% Sorting betas - Dados Não Processados
+%% Sorting betas - Dados não processados
 [BetaBasAntes , t_indexBasAntes]= sort(SubjStats.beta(1:2:size(hb.probe.link,1)),'descend');
 indexBasAntes=2*t_indexBasAntes -1;
 top3_indexBasAntes=(indexBasAntes(1:10));
@@ -443,7 +442,7 @@ top3_indexMIAntes=(indexMIAntes(1:10));
 indexMAAntes= 2*size(hb.probe.link,1) + 2*t_indexMAAntes -1;
 top3_indexMAAntes=(indexMAAntes(1:10));
 
-%% Sorting betas - Dados Após Processamento
+%% Sorting betas - Dados processados
 %Top 3 canais mais ativos/valores de beta maiores Por condição
 %Pos Processamento
 [BetaBasPos , t_indexBasPos]= sort(ActivacaoFinal.beta(1:2:size(hb.probe.link,1)),'descend');
@@ -468,5 +467,3 @@ top3_indexContrasteAntes=(indexContrasteAntes(1:10));
 [BetaContrastePos , t_indexContrastePos]= sort(MISuperiorMA_final.beta(1:2:end),'descend');
 indexContrastePos=2*t_indexContrastePos -1;
 top3_indexContrastePos=(indexContrastePos(1:10));
-
-

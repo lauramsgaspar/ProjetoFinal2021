@@ -22,10 +22,13 @@ FilteredSignal=filter(b2,a2,Filtered1);
 %Filtro Passa-Banda
 wn=[wn1 wn2];
 [b a]=butter(FilterOrder, wn, 'bandpass'); 
+
+% função transferência do filtro passa banda Butterworth de 3ª ordem, com a magnitude da resposta, medida em dB em função da frequência normalizada (Hz).
 h=fvtool(b,a);
 BandPassFilteredSignal=filter(b,a,UnfilteredSignal);
 
-%% Plot 
+%% Representação gráfica
+% Canal 11,referente ao par fonte-detetor S2-D3, sinal HbO
 
 figure;
 subplot(4,1,1)

@@ -1,6 +1,5 @@
 function [ diagonalCorrelacao, diagonalCorrelacaoLongo, mediaAutoCorrLongo, stdAutoCorrLongo] = AutoCorrelationMatrix(fnrisdata)
-%Para cada canal, por exemplo, S1-D1
-%Dividir os canais em Hbo e Hbr 
+%Para cada canal dividir em Hbo e Hbr 
 CanalHbo = fnrisdata.data(:, 1:2:end);
 CanalHbr = fnrisdata.data (:, 2:2:end);
 
@@ -18,7 +17,6 @@ mediaAutoCorr = mean(diagonalCorrelacao);
 stdAutoCorr = std(diagonalCorrelacao);
 
 %Apenas com os canais longos
-
 CanalLongo_indice=find(fnrisdata.probe.link.detector < 8);
 DadosCanalLongo=fnrisdata.data(:, CanalLongo_indice);
 CanalLongoHbo = DadosCanalLongo (:, 1:2:end);

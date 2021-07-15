@@ -1,7 +1,5 @@
-%% Artigo: Gagnon, L., Cooper, R. J., Yücel, M. A., Perdue, K. L., Greve, D. N., & Boas, D. A. (2012). 
+%% Baseado no artigo: Gagnon, L., Cooper, R. J., Yücel, M. A., Perdue, K. L., Greve, D. N., & Boas, D. A. (2012). 
 %Short separation channel location impacts the performance of short channel regression in NIRS. NeuroImage, 59(3), 2518–2528.
-%https://doi.org/10.1016/j.neuroimage.2011.08.095 
-
 function [RegressedData]=ShortSeparationRegression(hb)
 
 UnregressedChannelPlot=hb.data(:,1);
@@ -27,7 +25,8 @@ for i=1:size(CanalLongo_indice,1)
 end
 RegressedChannelPlot=RegressedData.data(:,1);
 
-%% Plot
+%% Representação gráfica
+% Referente ao par fonte-detetor S1-D1, sinal HbO)
 figure;
 subplot(2,1,1);
 plot(UnregressedChannelPlot); 
